@@ -7,8 +7,9 @@ import java.sql.Statement;
 
 public class UsuarioDAO {
     Conexao minhaConexao;
-    private final String INCLUIRUSUARIO = "insert into \"usuario\" (\"Nome\", \"Senha\", \"Email\", \"IdUser\",  \"TipoUsuario\") values (?,?,?,?,?)";
-    private final String QTDUSUARIOS = "select count(*) from \"usuario\"";
+    private static final String INCLUIRUSUARIO = "insert into \"usuario\" (\"Nome\", \"Senha\", \"Email\", \"IdUser\",  \"TipoUsuario\") values (?,?,?,?,?)";
+    private static final String QTDUSUARIOS = "select count(*) from \"usuario\"";
+    private static final String BUSCAUSUARIO = "select * from \"usuario\" where \"Email\"=? and \"Senha\"=?";
 
     public UsuarioDAO() {
         minhaConexao = new Conexao("jdbc:postgresql://localhost:5432/BDLoja", "postgres", "eryc");
@@ -44,5 +45,25 @@ public class UsuarioDAO {
             System.out.println("Erro na busca: " + e.getMessage());
         }
         return qtd;
+    }
+
+    public User buscarUser(String email, String senha) {
+
+        User user = null;
+        try {
+            minhaConexao.conectar();
+            PreparedStatement instrucao = minhaConexao.getConexao().prepareStatement(BUSCAUSUARIO);
+            instrucao.setString(1, email);
+            instrucao.setString(2, senha);
+            ResultSet rs = instrucao.executeQuery();
+            if (rs.next()) {
+                user = new User(rs.getString("Nome"), rs.getString("Senha"), rs.getString("Email"), rs.getInt("IdUser"),
+                        rs.getInt("TipoUsuario"));
+            }
+            minhaConexao.desconectar();
+        } catch (SQLException e) {
+            System.out.println("Erro na busca: " + e.getMessage());
+        }
+        return user;
     }
 }

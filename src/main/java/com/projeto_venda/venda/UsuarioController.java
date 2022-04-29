@@ -16,6 +16,11 @@ public class UsuarioController {
     User usuario = new User();
     UsuarioDAO usuarioDAO = new UsuarioDAO();
 
+    @RequestMapping(value = "/formPaginaInicial")
+    public void formPaginaInicial(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.sendRedirect("http://localhost:8080/index.html");
+    }
+
     @RequestMapping(value = "/formCadastraUser")
     public void formCadastraUser(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.sendRedirect("http://localhost:8080/indexCadastraUser.html");
@@ -35,25 +40,49 @@ public class UsuarioController {
         response.sendRedirect("http://localhost:8080/index.html");
     }
 
+    @RequestMapping("/falhaLogin")
+    public void falhaLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.getWriter().println("<html>" +
+                "<body> Login inexiste, por favor cadastra-se!" +
+                "<form action=/formCadastraUser><button>Cadastre-se</button>" +
+                "</form>" +
+                "<body>" +
+                "</html>");
+    }
+
+    @RequestMapping("/verificaLogin")
+    public void verificaLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var email = request.getParameter("email");
+        var senha = request.getParameter("senha");
+        if (usuarioDAO.buscarUser(email, senha) == null) {
+            response.sendRedirect("http://localhost:8080/falhaLogin");
+        } else {
+            /*
+             * usuario = usuarioDAO.buscarUser(email, senha);
+             * if(usuario.getTipoUser() == 1){// regra de négocio de login por tipo de
+             * usuário
+             * 
+             * }else{
+             * 
+             * }
+             */
+        }
+
+    }
+
     @RequestMapping("/parte2")
     public void doParte2(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.getWriter().println("Primeiro a parte 1");
         response.getWriter().println("parte 2 do processamento kkk");
     }
 
     @RequestMapping("/parte1")
     public void doEncaminhar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         RequestDispatcher encaminhar = request.getRequestDispatcher("/parte2");
         encaminhar.forward(request, response);
+        response.getWriter().println("Primeiro a parte 3");
     }
 
-    @RequestMapping("/redirecionarTeste")
-    public void doRedirecionamentoTeste(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.getWriter().println("Teste de redirect");
-    }
-
-    @RequestMapping("/redirecionar")
-    public void doRedirecionamento(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.sendRedirect("http://localhost:8080/redirecionarTeste");
-    }
 }
