@@ -1,6 +1,7 @@
 package com.projeto_venda.venda;
 
 import java.io.IOException;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -50,39 +51,71 @@ public class UsuarioController {
                 "</html>");
     }
 
-    @RequestMapping("/verificaLogin")
-    public void verificaLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var email = request.getParameter("email");
+    @RequestMapping(value = "/loginAdm")
+    public void formCadastraLogista(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var nome = request.getParameter("nome");
         var senha = request.getParameter("senha");
-        if (usuarioDAO.buscarUser(email, senha) == null) {
-            response.sendRedirect("http://localhost:8080/falhaLogin");
+        if (nome.equals("root") && (senha.equals("admin"))) {
+            response.sendRedirect("http://localhost:8080/indexCadastraLogista.html");
         } else {
-            /*
-             * usuario = usuarioDAO.buscarUser(email, senha);
-             * if(usuario.getTipoUser() == 1){// regra de négocio de login por tipo de
-             * usuário
-             * 
-             * }else{
-             * 
-             * }
-             */
+            response.getWriter().println("<html>" +
+                    "<body> Login Admin invalido" +
+                    "<form action=/formPaginaInicial><button>Voltar a pagina inicial</button>" +
+                    "</form>" +
+                    "<body>" +
+                    "</html>");
         }
 
     }
 
-    @RequestMapping("/parte2")
-    public void doParte2(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.getWriter().println("Primeiro a parte 1");
-        response.getWriter().println("parte 2 do processamento kkk");
+    @RequestMapping(value = "/cadastraLogista", method = RequestMethod.POST)
+    public void addLogista(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var nome = request.getParameter("nome");
+        var senha = request.getParameter("senha");
+        var email = request.getParameter("email");
+        usuario.setNome(nome);
+        usuario.setSenha(senha);
+        usuario.setEmail(email);
+        usuario.setId(usuarioDAO.qtdUsuario() + 1);
+        usuario.setTipoUser(2);
+        usuarioDAO.addUser(usuario);
+        response.sendRedirect("http://localhost:8080/index.html");
     }
 
-    @RequestMapping("/parte1")
-    public void doEncaminhar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    @RequestMapping("/verificaLogin")
+    public void verificaLogin(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        var email = request.getParameter("email");
+        var senha = request.getParameter("senha");
+        var usuario2 = new User();
+        usuario2 = usuarioDAO.buscarUser(email, senha);
+        if (usuario2 == null) {
+            response.sendRedirect("http://localhost:8080/falhaLogin");
+        } else {
+            if (usuario2.getTipoUser() == 1) {// Usuário Cliente
+                request.setAttribute("usuarioClienteLogado", usuario2);
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/logado");
+                dispatcher.forward(request, response);
+            } else {
+                request.setAttribute("usuarioLogistaLogado", usuario2);
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/telaLogista");
+                dispatcher.forward(request, response);
+            }
 
-        RequestDispatcher encaminhar = request.getRequestDispatcher("/parte2");
-        encaminhar.forward(request, response);
-        response.getWriter().println("Primeiro a parte 3");
+        }
     }
 
+    @RequestMapping("/telaLogista")
+    public void doTelaLogista(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        User user = (User) request.getAttribute("usuarioLogistaLogado");
+
+    }
+
+    @RequestMapping("/logado")
+    public void doLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        User user = (User) request.getAttribute("usuarioLogado");
+        response.getWriter()
+                .println("Nome: " + user.getNome() + ", Email: " + user.getEmail() + ", Tipo do Usuario: "
+                        + user.getTipoUser());
+    }
 }
