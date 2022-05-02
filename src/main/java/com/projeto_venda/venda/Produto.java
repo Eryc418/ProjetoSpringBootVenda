@@ -7,6 +7,10 @@ public class Produto {
     private Float preco;
     private Integer id;
 
+    Produto() {
+
+    }
+
     Produto(String nome, String marca, String modelo, Float preco, Integer id) {
         this.nome = nome;
         this.marca = marca;
