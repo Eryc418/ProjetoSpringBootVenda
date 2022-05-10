@@ -11,6 +11,7 @@ public class ProdutoDAO {
     private static final String INCLUIRPRODUTO = "insert into \"produto\" (\"nome\", \"marca\", \"modelo\", \"preco\", \"idProduto\") values (?,?,?,?,?)";
     private static final String QTDPRODUTOS = "select count(*) from \"produto\"";
     private static final String RELATORIOPRODUTOS = "select * from \"produto\"";
+    private static final String BUSCAPRODUTO = "select * from \"produto\" where \"idProduto\"=?";
 
     public ProdutoDAO() {
         minhaConexao = new Conexao("jdbc:postgresql://localhost:5432/BDLoja", "postgres", "eryc");
@@ -66,5 +67,25 @@ public class ProdutoDAO {
             System.out.println("Erro na busca: " + e.getMessage());
         }
         return qtd;
+    }
+
+    public Produto buscarProduto(Integer idProduto) {
+
+        Produto produto = null;
+        try {
+            minhaConexao.conectar();
+            PreparedStatement instrucao = minhaConexao.getConexao().prepareStatement(BUSCAPRODUTO);
+            instrucao.setInt(1, idProduto);
+            ResultSet rs = instrucao.executeQuery();
+            if (rs.next()) {
+                produto = new Produto(rs.getString("nome"), rs.getString("marca"), rs.getString("modelo"),
+                        rs.getFloat("preco"),
+                        rs.getInt("idProduto"));
+            }
+            minhaConexao.desconectar();
+        } catch (SQLException e) {
+            System.out.println("Erro na busca: " + e.getMessage());
+        }
+        return produto;
     }
 }
