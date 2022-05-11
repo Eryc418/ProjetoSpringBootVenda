@@ -223,6 +223,7 @@ public class UsuarioController {
         Produto produto = null;
         var i = 0;
         ArrayList<Produto> lista_produto = new ArrayList();
+        Double compra = 0.0;
         if (achouCarrinho == true) {
             StringTokenizer tokenizer = new StringTokenizer(carrinhoCompras.getValue(), "|");
             while (tokenizer.hasMoreTokens()) {
@@ -247,16 +248,27 @@ public class UsuarioController {
                 response.getWriter()
                         .println("<td>" + "Id do Produto: " + lista_produto.get(i).getId() + "    |    " + "</td>");
                 response.getWriter().println("</tr>");
+                compra = compra + lista_produto.get(i).getPreco();
             }
             response.getWriter().println("</table>");
             response.getWriter().println("<br>");
+
+            response.getWriter().println("<form");
+            response.getWriter().println("action=/VisualizarCarrinho");
+            response.getWriter().println(">");
+            response.getWriter().println("<button>");
+            response.getWriter().println("Finalizar compras");
+            response.getWriter().println("</button>");
+            response.getWriter().println("</form>");
+
             response.getWriter().println("<form");// Botão sair
-            response.getWriter().println("action=/telaCliente");
+            response.getWriter().println("action=/VisualizarCarrinho");
             response.getWriter().println(">");
             response.getWriter().println("<button>");
             response.getWriter().println("MenuPrincipal");
             response.getWriter().println("</button>");
             response.getWriter().println("</form>");// Botão sair
+            response.getWriter().println("<h1>Total da compra: " + compra + "</h1>");
             response.getWriter().println("</body>");
             response.getWriter().println("<html>");
         } else {
@@ -344,40 +356,137 @@ public class UsuarioController {
     }
 
     @RequestMapping("/teste")
-    public void doLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var i = 0;
-        response.getWriter().println("<html>");
-        response.getWriter().println("<body>");
-        response.getWriter().println("<h1> Lista de Produtos comprados</h1>");
-        response.getWriter().println("<br>");
-        response.getWriter().println("<h2> Lista de Produtos Disponiveis</h2>");
-        response.getWriter().println("<table>");
-        for (i = 0; i < listaCompra.size(); i++) {
-            response.getWriter().println("<tr>");
-            response.getWriter()
-                    .println("<td>" + "Nome: " + listaCompra.get(i).getNomeProduto() + "    |    " + "</td>");
-            response.getWriter()
-                    .println("<td>" + "Id Produto: " + listaCompra.get(i).getIdProduto() + "    |    " + "</td>");
-            response.getWriter()
-                    .println("<td>" + "Id do Cliente: " + listaCompra.get(i).getIdUser() + "    |    " + "</td>");
-            response.getWriter().println("</td>");
+    public void doTeste(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Cookie carrinhoCompras = new Cookie("carrinhoCompras", "");
+        carrinhoCompras.setMaxAge(60 * 60 * 24 * 7);
+        Cookie[] requestCookies = request.getCookies();
+        boolean achouCarrinho = false;
 
-            response.getWriter().println("</tr>");
+        if (requestCookies != null) {
+            for (var c : requestCookies) {
+                if (c.getName().equals("carrinhoCompras")) {
+                    achouCarrinho = true;
+                    carrinhoCompras = c;
+                    break;
+                }
+            }
         }
-        response.getWriter().println("</table>");
-        response.getWriter().println("<br>");
-        response.getWriter().println("<br>");
-        response.getWriter().println("<h2> Para realizar a compra do produto digite o id</h2>");
-        response.getWriter().println("<br>");
-        response.getWriter().println("</form>");
-        response.getWriter().println("<form");// Botão sair
-        response.getWriter().println("action=/logout");
-        response.getWriter().println(">");
-        response.getWriter().println("<button>");
-        response.getWriter().println("Sair");
-        response.getWriter().println("</button>");
-        response.getWriter().println("</form>");// Botão sair
-        response.getWriter().println("</body>");
-        response.getWriter().println("<html>");
+
+        ProdutoDAO produtoDAO = new ProdutoDAO();
+        Produto produto = null;
+        var i = 0;
+        ArrayList<Produto> lista_produto = new ArrayList();
+        if (achouCarrinho == true) {
+            StringTokenizer tokenizer = new StringTokenizer(carrinhoCompras.getValue(), "|");
+            while (tokenizer.hasMoreTokens()) {
+                produto = produtoDAO.buscarProduto(Integer.parseInt(tokenizer.nextToken()));
+                lista_produto.add(produto);
+            }
+            response.getWriter().println("<html>");
+            response.getWriter().println("<body>");
+            response.getWriter().println("<h1>Seja bem vindo ao seu carrinho de compras</h1>");
+            response.getWriter().println("<br>");
+            response.getWriter().println("<table>");
+            for (i = 0; i < lista_produto.size(); i++) {
+                response.getWriter().println("<tr>");
+                response.getWriter()
+                        .println("<td>" + "Nome: " + lista_produto.get(i).getNome() + "    |    " + "</td>");
+                response.getWriter()
+                        .println("<td>" + "Marca: " + lista_produto.get(i).getMarca() + "    |    " + "</td>");
+                response.getWriter()
+                        .println("<td>" + "Modelo: " + lista_produto.get(i).getModelo() + "    |    " + "</td>");
+                response.getWriter()
+                        .println("<td>" + "Preço: " + lista_produto.get(i).getPreco() + "    |    " + "</td>");
+                response.getWriter()
+                        .println("<td>" + "Id do Produto: " + lista_produto.get(i).getId() + "    |    " + "</td>");
+                response.getWriter().println("<td>");
+                response.getWriter()
+                        .println("<a href='/teste2?idProdutoRemove=" + lista_produto.get(i).getId()
+                                + "'>- REMOVER</a>");
+                response.getWriter().println("</td>");
+                response.getWriter().println("</tr>");
+            }
+            response.getWriter().println("</table>");
+            response.getWriter().println("<br>");
+            response.getWriter().println("<form");// Botão sair
+            response.getWriter().println("action=/telaCliente");
+            response.getWriter().println(">");
+            response.getWriter().println("<button>");
+            response.getWriter().println("MenuPrincipal");
+            response.getWriter().println("</button>");
+            response.getWriter().println("</form>");// Botão sair
+            response.getWriter().println("</body>");
+            response.getWriter().println("<html>");
+        } else {
+            response.getWriter().println("<html>");
+            response.getWriter().println("<body>");
+            response.getWriter().println(
+                    "<h1>Você não possui compras para excluir itens de compras, caso deseje comprar vá ao menu principal</h1>");
+            response.getWriter().println("<br>");
+            response.getWriter().println("<form");// Botão sair
+            response.getWriter().println("action=/telaCliente");
+            response.getWriter().println(">");
+            response.getWriter().println("<button>");
+            response.getWriter().println("MenuPrincipal");
+            response.getWriter().println("</button>");
+            response.getWriter().println("</form>");// Botão sair
+            response.getWriter().println("</body>");
+            response.getWriter().println("<html>");
+        }
+    }
+
+    @RequestMapping("/teste2")
+    public void doTeste2(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        var idProduto = Integer.parseInt(request.getParameter("idProdutoRemove"));
+        Cookie carrinhoCompras = new Cookie("carrinhoCompras", "");
+        carrinhoCompras.setMaxAge(60 * 60 * 24 * 7);
+        Cookie[] requestCookies = request.getCookies();
+        boolean achouCarrinho = false;
+
+        if (requestCookies != null) {
+            for (var c : requestCookies) {
+                if (c.getName().equals("carrinhoCompras")) {
+                    achouCarrinho = true;
+                    carrinhoCompras = c;
+                    break;
+                }
+            }
+        }
+        ProdutoDAO produtoDAO = new ProdutoDAO();
+        ArrayList<Produto> lista_produto = new ArrayList();
+        ArrayList<Produto> nova_List_produto = new ArrayList();
+        Produto produtoEscolhido = null;
+        var i = 0;
+        var j = 0;
+        if (achouCarrinho == true) {
+            StringTokenizer tokenizer = new StringTokenizer(carrinhoCompras.getValue(), "|");
+            while (tokenizer.hasMoreTokens()) {
+                produtoEscolhido = produtoDAO.buscarProduto(Integer.parseInt(tokenizer.nextToken()));
+                lista_produto.add(produtoEscolhido);
+            }
+            // lista_produto.remove(idProduto);
+
+            for (i = 0; i < lista_produto.size(); i++) {
+                if (lista_produto.get(i).getId() == idProduto) {
+                    lista_produto.get(i).setId(99);
+                }
+                if (lista_produto.get(i).getId() != 99) {
+                    response.getWriter().println(lista_produto.get(i).getNome());
+                    Cookie carrinhoComprasAtualizado = new Cookie("carrinhoCompras", "");
+                    carrinhoCompras.setMaxAge(60 * 60 * 24 * 7);
+                    for (i = 0; i < lista_produto.size(); i++) {
+                        String value = carrinhoComprasAtualizado.getValue();
+                        carrinhoComprasAtualizado.setValue(value + lista_produto.get(i).getId() + "|");
+                        response.addCookie(carrinhoComprasAtualizado);
+                    }
+                    RequestDispatcher dispatcher = request.getRequestDispatcher("/telaCliente");
+                    dispatcher.forward(request, response);
+                }
+            }
+        } else {
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/telaCliente");
+            dispatcher.forward(request, response);
+        }
     }
 }
